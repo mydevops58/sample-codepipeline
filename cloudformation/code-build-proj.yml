@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CodeBuild Projects for Dev, Test, and Prod
+
+Parameters:
+  ProjectPrefix:
+    Type: String
+    Default: demo-nodejs-app
+
+  EcrRepoUri:
+    Type: String
+
+Resources:
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectPrefix}-codebuild-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCodeBuildDeveloperAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
+        - arn:aws:iam::aws:policy/AmazonECS_FullAccess
+        - arn:aws:iam::aws:policy/SecurityAudit
+        - arn:aws:iam::aws:policy/SecurityHubFullAccess
+
+  BuildDevProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub "${ProjectPrefix}-BuildDev"
+      Source:
+        Type: CODEPIPELINE
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        Type: LINUX_CONTAINER
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: IMAGE_REPO_NAME
+            Value: !Ref ProjectPrefix
+          - Name: ECR_REPO
+            Value: !Ref EcrRepoUri
+          - Name: CONTAINER_NAME
+            Value: !Ref ProjectPrefix
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      TimeoutInMinutes: 30
+      SourceVersion: main
+      Description: Dev stage CodeBuild project
+      BuildSpec: buildspec-dev.yml
+
+  BuildTestProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub "${ProjectPrefix}-BuildTest"
+      Source:
+        Type: CODEPIPELINE
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        Type: LINUX_CONTAINER
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: IMAGE_REPO_NAME
+            Value: !Ref ProjectPrefix
+          - Name: ECR_REPO
+            Value: !Ref EcrRepoUri
+          - Name: CONTAINER_NAME
+            Value: !Ref ProjectPrefix
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      TimeoutInMinutes: 30
+      SourceVersion: main
+      Description: Test stage CodeBuild project
+      BuildSpec: buildspec-test.yml
+
+  BuildProdProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub "${ProjectPrefix}-BuildProd"
+      Source:
+        Type: CODEPIPELINE
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        Type: LINUX_CONTAINER
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: IMAGE_REPO_NAME
+            Value: !Ref ProjectPrefix
+          - Name: ECR_REPO
+            Value: !Ref EcrRepoUri
+          - Name: CONTAINER_NAME
+            Value: !Ref ProjectPrefix
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      TimeoutInMinutes: 30
+      SourceVersion: main
+      Description: Prod stage CodeBuild project
+      BuildSpec: buildspec-prod.yml
