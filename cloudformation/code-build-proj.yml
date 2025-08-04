@@ -26,7 +26,6 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
         - arn:aws:iam::aws:policy/AmazonECS_FullAccess
         - arn:aws:iam::aws:policy/SecurityAudit
-        - arn:aws:iam::aws:policy/SecurityHubFullAccess
 
   BuildDevProject:
     Type: AWS::CodeBuild::Project
